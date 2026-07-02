@@ -1,10 +1,17 @@
 # Helpdesk Ticket Management API
 
+![.NET](https://img.shields.io/badge/.NET-8-purple)
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-8-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![Docker](https://img.shields.io/badge/Docker-2496ED)
+
 ASP.NET Core 8 Web API for managing helpdesk tickets with JWT authentication, role-based authorization, comments, file attachments, optional email notification hooks, Swagger, PostgreSQL, EF Core, Docker, and a Clean Architecture project layout.
 
 ## Live Demo
 
-Coming soon.
+Swagger Documentation
+
+https://helpdesk-ticket-management-api.onrender.com/swagger
 
 ## Features
 
@@ -25,17 +32,14 @@ Coming soon.
 
 ## Architecture
 
+Architecture image will be added later.
+
 ```mermaid
 flowchart TD
-    Client[Client / Swagger UI] --> Api[HelpdeskTicketManagement.Api]
-    Api --> Application[HelpdeskTicketManagement.Application]
-    Api --> Infrastructure[HelpdeskTicketManagement.Infrastructure]
-    Infrastructure --> Application
-    Application --> Domain[HelpdeskTicketManagement.Domain]
-    Infrastructure --> Domain
+    Client[Client] --> RestApi[REST API]
+    RestApi --> Application[Application]
+    Application --> Infrastructure[Infrastructure]
     Infrastructure --> PostgreSql[(PostgreSQL)]
-    Infrastructure --> FileStorage[(Local Attachment Storage)]
-    Infrastructure --> EmailHook[Email Notification Hook]
 ```
 
 The solution follows Clean Architecture principles. Domain contains the core entities and enums, Application contains DTOs and contracts, Infrastructure implements persistence and external services, and Api exposes the HTTP endpoints.
@@ -102,13 +106,9 @@ http://localhost:5080/swagger
 
 ## Screenshots
 
-Screenshots will be added once the API is deployed and the Swagger flow is finalized.
+### Swagger UI
 
-| Area | Preview |
-| --- | --- |
-| Swagger API documentation | Coming soon |
-| JWT login flow | Coming soon |
-| Ticket dashboard response | Coming soon |
+![Swagger UI screenshot](docs/screenshots/swagger-ui.svg)
 
 ## Roles
 

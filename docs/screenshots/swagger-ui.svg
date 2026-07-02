@@ -1,0 +1,73 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#f7f7f7"/>
+  <rect width="1600" height="70" fill="#1b1b1b"/>
+  <circle cx="96" cy="35" r="18" fill="#85EA2D"/>
+  <text x="86" y="42" fill="#1b1b1b" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">{ }</text>
+  <text x="125" y="43" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="28">Swagger</text>
+  <text x="125" y="58" fill="#c8c8c8" font-family="Arial, Helvetica, sans-serif" font-size="8" letter-spacing="1">SUPPORTED BY SMARTBEAR</text>
+  <text x="930" y="43" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Select a definition</text>
+  <rect x="1090" y="25" width="415" height="30" rx="4" fill="#ffffff" stroke="#68b445" stroke-width="2"/>
+  <text x="1105" y="45" fill="#253044" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">HelpdeskTicketManagement.Api v1</text>
+  <path d="M1480 37 L1488 37 L1484 43 Z" fill="#111111"/>
+
+  <rect y="70" width="1600" height="160" fill="#fafafa"/>
+  <text x="80" y="150" fill="#33384a" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Helpdesk Ticket Management API</text>
+  <rect x="664" y="118" width="32" height="22" rx="11" fill="#7f8694"/>
+  <text x="672" y="135" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">v1</text>
+  <rect x="703" y="118" width="62" height="22" rx="11" fill="#79c900"/>
+  <text x="713" y="135" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">OAS 3.0</text>
+  <text x="80" y="178" fill="#3a86ff" font-family="Arial, Helvetica, sans-serif" font-size="15">https://helpdesk-ticket-management-api.onrender.com/swagger/v1/swagger.json</text>
+
+  <rect y="230" width="1600" height="96" fill="#ffffff"/>
+  <rect x="1360" y="260" width="150" height="34" rx="4" fill="#ffffff" stroke="#49cc90" stroke-width="2"/>
+  <text x="1386" y="282" fill="#49cc90" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">Authorize</text>
+  <rect x="1470" y="270" width="11" height="12" rx="2" fill="#49cc90"/>
+  <path d="M1471 270 C1471 262 1480 262 1480 270" stroke="#49cc90" stroke-width="3" fill="none"/>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="92" y="378" fill="#33384a" font-size="28" font-weight="700">Auth</text>
+    <path d="M1470 372 L1478 364 L1486 372" stroke="#111111" stroke-width="2" fill="none"/>
+    <line x1="84" y1="395" x2="1510" y2="395" stroke="#c9cdd3"/>
+
+    <rect x="84" y="402" width="1426" height="42" rx="4" fill="#e8f6f0" stroke="#49cc90"/>
+    <rect x="90" y="408" width="82" height="30" rx="3" fill="#49cc90"/>
+    <text x="113" y="429" fill="#ffffff" font-size="15" font-weight="700">POST</text>
+    <text x="184" y="430" fill="#1f2937" font-size="18" font-weight="700">/api/Auth/register</text>
+    <text x="1460" y="431" fill="#8c9693" font-size="20">lock</text>
+
+    <rect x="84" y="458" width="1426" height="42" rx="4" fill="#e8f6f0" stroke="#49cc90"/>
+    <rect x="90" y="464" width="82" height="30" rx="3" fill="#49cc90"/>
+    <text x="113" y="485" fill="#ffffff" font-size="15" font-weight="700">POST</text>
+    <text x="184" y="486" fill="#1f2937" font-size="18" font-weight="700">/api/Auth/login</text>
+    <text x="1460" y="487" fill="#8c9693" font-size="20">lock</text>
+
+    <rect x="84" y="514" width="1426" height="42" rx="4" fill="#e8f2ff" stroke="#61affe"/>
+    <rect x="90" y="520" width="82" height="30" rx="3" fill="#61affe"/>
+    <text x="118" y="541" fill="#ffffff" font-size="15" font-weight="700">GET</text>
+    <text x="184" y="542" fill="#1f2937" font-size="18" font-weight="700">/api/Auth/me</text>
+    <text x="1460" y="543" fill="#8c9693" font-size="20">lock</text>
+
+    <text x="92" y="604" fill="#33384a" font-size="28" font-weight="700">Dashboard</text>
+    <path d="M1470 598 L1478 590 L1486 598" stroke="#111111" stroke-width="2" fill="none"/>
+    <line x1="84" y1="622" x2="1510" y2="622" stroke="#c9cdd3"/>
+    <rect x="84" y="628" width="1426" height="42" rx="4" fill="#e8f2ff" stroke="#61affe"/>
+    <rect x="90" y="634" width="82" height="30" rx="3" fill="#61affe"/>
+    <text x="118" y="655" fill="#ffffff" font-size="15" font-weight="700">GET</text>
+    <text x="184" y="656" fill="#1f2937" font-size="18" font-weight="700">/api/Dashboard</text>
+    <text x="1460" y="657" fill="#8c9693" font-size="20">lock</text>
+
+    <text x="92" y="720" fill="#33384a" font-size="28" font-weight="700">HelpdeskTicketManagement.Api</text>
+    <path d="M1470 714 L1478 706 L1486 714" stroke="#111111" stroke-width="2" fill="none"/>
+    <line x1="84" y1="738" x2="1510" y2="738" stroke="#c9cdd3"/>
+    <rect x="84" y="744" width="1426" height="42" rx="4" fill="#e8f2ff" stroke="#61affe"/>
+    <rect x="90" y="750" width="82" height="30" rx="3" fill="#61affe"/>
+    <text x="118" y="771" fill="#ffffff" font-size="15" font-weight="700">GET</text>
+    <text x="184" y="772" fill="#1f2937" font-size="18" font-weight="700">/</text>
+    <text x="1460" y="773" fill="#8c9693" font-size="20">lock</text>
+
+    <text x="92" y="840" fill="#33384a" font-size="28" font-weight="700">Tickets</text>
+    <path d="M1470 834 L1478 826 L1486 834" stroke="#111111" stroke-width="2" fill="none"/>
+    <line x1="84" y1="858" x2="1510" y2="858" stroke="#c9cdd3"/>
+    <rect x="84" y="864" width="1426" height="28" rx="4" fill="#e8f2ff" stroke="#61affe"/>
+  </g>
+</svg>
