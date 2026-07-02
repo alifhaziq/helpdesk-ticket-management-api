@@ -5,15 +5,15 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["src/HelpdeskTicketManagement.Domain/HelpdeskTicketManagement.Domain.csproj", "src/HelpdeskTicketManagement.Domain/"]
-COPY ["src/HelpdeskTicketManagement.Application/HelpdeskTicketManagement.Application.csproj", "src/HelpdeskTicketManagement.Application/"]
-COPY ["src/HelpdeskTicketManagement.Infrastructure/HelpdeskTicketManagement.Infrastructure.csproj", "src/HelpdeskTicketManagement.Infrastructure/"]
-COPY ["src/HelpdeskTicketManagement.Api/HelpdeskTicketManagement.Api.csproj", "src/HelpdeskTicketManagement.Api/"]
-RUN dotnet restore "src/HelpdeskTicketManagement.Api/HelpdeskTicketManagement.Api.csproj"
+COPY ["src/HelpDeskPro.Domain/HelpDeskPro.Domain.csproj", "src/HelpDeskPro.Domain/"]
+COPY ["src/HelpDeskPro.Application/HelpDeskPro.Application.csproj", "src/HelpDeskPro.Application/"]
+COPY ["src/HelpDeskPro.Infrastructure/HelpDeskPro.Infrastructure.csproj", "src/HelpDeskPro.Infrastructure/"]
+COPY ["src/HelpDeskPro.Api/HelpDeskPro.Api.csproj", "src/HelpDeskPro.Api/"]
+RUN dotnet restore "src/HelpDeskPro.Api/HelpDeskPro.Api.csproj"
 COPY . .
-RUN dotnet publish "src/HelpdeskTicketManagement.Api/HelpdeskTicketManagement.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "src/HelpDeskPro.Api/HelpDeskPro.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "HelpdeskTicketManagement.Api.dll"]
+ENTRYPOINT ["dotnet", "HelpDeskPro.Api.dll"]

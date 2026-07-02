@@ -1,4 +1,4 @@
-# Helpdesk Ticket Management API
+# HelpDesk Pro API
 
 ![.NET](https://img.shields.io/badge/.NET-8-purple)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-8-blue)
@@ -11,7 +11,7 @@ ASP.NET Core 8 Web API for managing helpdesk tickets with JWT authentication, ro
 
 Swagger Documentation
 
-https://helpdesk-ticket-management-api.onrender.com/swagger
+https://helpdesk-pro-api.onrender.com/swagger
 
 ## Features
 
@@ -46,10 +46,10 @@ The solution follows Clean Architecture principles. Domain contains the core ent
 
 ## Projects
 
-- `HelpdeskTicketManagement.Domain` - entities and enums.
-- `HelpdeskTicketManagement.Application` - DTOs and application contracts.
-- `HelpdeskTicketManagement.Infrastructure` - EF Core PostgreSQL, JWT, password hashing, local file storage, and notification services.
-- `HelpdeskTicketManagement.Api` - controllers, authentication, Swagger, and startup.
+- `HelpDeskPro.Domain` - entities and enums.
+- `HelpDeskPro.Application` - DTOs and application contracts.
+- `HelpDeskPro.Infrastructure` - EF Core PostgreSQL, JWT, password hashing, local file storage, and notification services.
+- `HelpDeskPro.Api` - controllers, authentication, Swagger, and startup.
 
 ## Default Accounts
 
@@ -74,10 +74,10 @@ http://localhost:8080/swagger
 
 ## Run Locally
 
-Start PostgreSQL locally, update `src/HelpdeskTicketManagement.Api/appsettings.json` if needed, then run:
+Start PostgreSQL locally, update `src/HelpDeskPro.Api/appsettings.json` if needed, then run:
 
 ```bash
-dotnet run --project src/HelpdeskTicketManagement.Api/HelpdeskTicketManagement.Api.csproj
+dotnet run --project src/HelpDeskPro.Api/HelpDeskPro.Api.csproj
 ```
 
 Swagger will be available at:

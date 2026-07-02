@@ -7,16 +7,16 @@
   <text x="125" y="58" fill="#c8c8c8" font-family="Arial, Helvetica, sans-serif" font-size="8" letter-spacing="1">SUPPORTED BY SMARTBEAR</text>
   <text x="930" y="43" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Select a definition</text>
   <rect x="1090" y="25" width="415" height="30" rx="4" fill="#ffffff" stroke="#68b445" stroke-width="2"/>
-  <text x="1105" y="45" fill="#253044" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">HelpdeskTicketManagement.Api v1</text>
+  <text x="1105" y="45" fill="#253044" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">HelpDeskPro.Api v1</text>
   <path d="M1480 37 L1488 37 L1484 43 Z" fill="#111111"/>
 
   <rect y="70" width="1600" height="160" fill="#fafafa"/>
-  <text x="80" y="150" fill="#33384a" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Helpdesk Ticket Management API</text>
+  <text x="80" y="150" fill="#33384a" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">HelpDesk Pro API</text>
   <rect x="664" y="118" width="32" height="22" rx="11" fill="#7f8694"/>
   <text x="672" y="135" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">v1</text>
   <rect x="703" y="118" width="62" height="22" rx="11" fill="#79c900"/>
   <text x="713" y="135" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">OAS 3.0</text>
-  <text x="80" y="178" fill="#3a86ff" font-family="Arial, Helvetica, sans-serif" font-size="15">https://helpdesk-ticket-management-api.onrender.com/swagger/v1/swagger.json</text>
+  <text x="80" y="178" fill="#3a86ff" font-family="Arial, Helvetica, sans-serif" font-size="15">https://helpdesk-pro-api.onrender.com/swagger/v1/swagger.json</text>
 
   <rect y="230" width="1600" height="96" fill="#ffffff"/>
   <rect x="1360" y="260" width="150" height="34" rx="4" fill="#ffffff" stroke="#49cc90" stroke-width="2"/>
@@ -56,7 +56,7 @@
     <text x="184" y="656" fill="#1f2937" font-size="18" font-weight="700">/api/Dashboard</text>
     <text x="1460" y="657" fill="#8c9693" font-size="20">lock</text>
 
-    <text x="92" y="720" fill="#33384a" font-size="28" font-weight="700">HelpdeskTicketManagement.Api</text>
+    <text x="92" y="720" fill="#33384a" font-size="28" font-weight="700">HelpDeskPro.Api</text>
     <path d="M1470 714 L1478 706 L1486 714" stroke="#111111" stroke-width="2" fill="none"/>
     <line x1="84" y1="738" x2="1510" y2="738" stroke="#c9cdd3"/>
     <rect x="84" y="744" width="1426" height="42" rx="4" fill="#e8f2ff" stroke="#61affe"/>

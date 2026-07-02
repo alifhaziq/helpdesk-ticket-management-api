@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: "helpdesk_ticket_management"
+      POSTGRES_DB: "helpdesk_pro"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     ports:
@@ -18,9 +18,9 @@ services:
       - postgres
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=helpdesk_ticket_management;Username=postgres;Password=postgres"
-      Jwt__Issuer: "HelpdeskTicketManagement"
-      Jwt__Audience: "HelpdeskTicketManagement"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=helpdesk_pro;Username=postgres;Password=postgres"
+      Jwt__Issuer: "HelpDeskPro"
+      Jwt__Audience: "HelpDeskPro"
       Jwt__Secret: "replace-this-development-secret-with-at-least-32-characters"
       SeedAdmin__Email: "admin@helpdesk.local"
       SeedAdmin__Password: "Admin123!"
