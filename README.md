@@ -1,6 +1,6 @@
 # Helpdesk Ticket Management API
 
-ASP.NET Core 8 Web API for managing helpdesk tickets with JWT authentication, role-based authorization, comments, file attachments, optional email notification hooks, Swagger, SQL Server, EF Core, Docker, and a Clean Architecture project layout.
+ASP.NET Core 8 Web API for managing helpdesk tickets with JWT authentication, role-based authorization, comments, file attachments, optional email notification hooks, Swagger, PostgreSQL, EF Core, Docker, and a Clean Architecture project layout.
 
 ## Live Demo
 
@@ -20,7 +20,7 @@ Coming soon.
 - Dashboard API with ticket totals, status counts, priority counts, and recent tickets.
 - Optional email notification hook using a logging-based implementation.
 - Swagger/OpenAPI documentation with Bearer token support.
-- SQL Server persistence with Entity Framework Core.
+- PostgreSQL persistence with Entity Framework Core.
 - Docker and Docker Compose support.
 
 ## Architecture
@@ -33,7 +33,7 @@ flowchart TD
     Infrastructure --> Application
     Application --> Domain[HelpdeskTicketManagement.Domain]
     Infrastructure --> Domain
-    Infrastructure --> SqlServer[(SQL Server)]
+    Infrastructure --> PostgreSql[(PostgreSQL)]
     Infrastructure --> FileStorage[(Local Attachment Storage)]
     Infrastructure --> EmailHook[Email Notification Hook]
 ```
@@ -44,7 +44,7 @@ The solution follows Clean Architecture principles. Domain contains the core ent
 
 - `HelpdeskTicketManagement.Domain` - entities and enums.
 - `HelpdeskTicketManagement.Application` - DTOs and application contracts.
-- `HelpdeskTicketManagement.Infrastructure` - EF Core SQL Server, JWT, password hashing, local file storage, and notification services.
+- `HelpdeskTicketManagement.Infrastructure` - EF Core PostgreSQL, JWT, password hashing, local file storage, and notification services.
 - `HelpdeskTicketManagement.Api` - controllers, authentication, Swagger, and startup.
 
 ## Default Accounts
@@ -70,7 +70,7 @@ http://localhost:8080/swagger
 
 ## Run Locally
 
-Start SQL Server locally, update `src/HelpdeskTicketManagement.Api/appsettings.json` if needed, then run:
+Start PostgreSQL locally, update `src/HelpdeskTicketManagement.Api/appsettings.json` if needed, then run:
 
 ```bash
 dotnet run --project src/HelpdeskTicketManagement.Api/HelpdeskTicketManagement.Api.csproj

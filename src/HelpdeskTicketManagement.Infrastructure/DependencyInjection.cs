@@ -21,12 +21,12 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
         services.AddDbContext<HelpdeskDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 connectionString,
-                sqlServer => sqlServer.EnableRetryOnFailure(
+                npgsql => npgsql.EnableRetryOnFailure(
                     maxRetryCount: 5,
                     maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorNumbersToAdd: null)));
+                    errorCodesToAdd: null)));
         services.AddScoped<IHelpdeskDbContext>(provider => provider.GetRequiredService<HelpdeskDbContext>());
 
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();

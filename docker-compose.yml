@@ -1,23 +1,24 @@
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Your_password123"
+      POSTGRES_DB: "helpdesk_ticket_management"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqlserver-data:/var/opt/mssql
+      - postgres-data:/var/lib/postgresql/data
 
   api:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - sqlserver
+      - postgres
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=HelpdeskTicketManagement;User Id=sa;Password=Your_password123;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=helpdesk_ticket_management;Username=postgres;Password=postgres"
       Jwt__Issuer: "HelpdeskTicketManagement"
       Jwt__Audience: "HelpdeskTicketManagement"
       Jwt__Secret: "replace-this-development-secret-with-at-least-32-characters"
@@ -31,5 +32,5 @@ services:
       - attachment-data:/app/attachments
 
 volumes:
-  sqlserver-data:
+  postgres-data:
   attachment-data:
