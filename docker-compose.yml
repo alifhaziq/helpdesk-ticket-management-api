@@ -1,0 +1,35 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - sqlserver
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=HelpdeskTicketManagement;User Id=sa;Password=Your_password123;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Jwt__Issuer: "HelpdeskTicketManagement"
+      Jwt__Audience: "HelpdeskTicketManagement"
+      Jwt__Secret: "replace-this-development-secret-with-at-least-32-characters"
+      SeedAdmin__Email: "admin@helpdesk.local"
+      SeedAdmin__Password: "Admin123!"
+      Database__EnsureCreated: "true"
+      AttachmentStorage__RootPath: "/app/attachments"
+    ports:
+      - "8080:8080"
+    volumes:
+      - attachment-data:/app/attachments
+
+volumes:
+  sqlserver-data:
+  attachment-data:
