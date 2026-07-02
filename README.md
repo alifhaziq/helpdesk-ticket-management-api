@@ -2,6 +2,44 @@
 
 ASP.NET Core 8 Web API for managing helpdesk tickets with JWT authentication, role-based authorization, comments, file attachments, optional email notification hooks, Swagger, SQL Server, EF Core, Docker, and a Clean Architecture project layout.
 
+## Live Demo
+
+Coming soon.
+
+## Features
+
+- JWT authentication with secure password hashing.
+- Role-based access control for `Admin`, `Agent`, and `User`.
+- User registration, login, and current profile endpoint.
+- Admin-only user management for creating agents and admins.
+- Ticket creation, listing, details, and updates.
+- Ticket assignment to agents.
+- Ticket status workflow: `Open`, `InProgress`, `Resolved`, and `Closed`.
+- Ticket comments for collaboration.
+- File attachment upload and download.
+- Dashboard API with ticket totals, status counts, priority counts, and recent tickets.
+- Optional email notification hook using a logging-based implementation.
+- Swagger/OpenAPI documentation with Bearer token support.
+- SQL Server persistence with Entity Framework Core.
+- Docker and Docker Compose support.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    Client[Client / Swagger UI] --> Api[HelpdeskTicketManagement.Api]
+    Api --> Application[HelpdeskTicketManagement.Application]
+    Api --> Infrastructure[HelpdeskTicketManagement.Infrastructure]
+    Infrastructure --> Application
+    Application --> Domain[HelpdeskTicketManagement.Domain]
+    Infrastructure --> Domain
+    Infrastructure --> SqlServer[(SQL Server)]
+    Infrastructure --> FileStorage[(Local Attachment Storage)]
+    Infrastructure --> EmailHook[Email Notification Hook]
+```
+
+The solution follows Clean Architecture principles. Domain contains the core entities and enums, Application contains DTOs and contracts, Infrastructure implements persistence and external services, and Api exposes the HTTP endpoints.
+
 ## Projects
 
 - `HelpdeskTicketManagement.Domain` - entities and enums.
@@ -62,8 +100,28 @@ http://localhost:5080/swagger
 - `GET /api/tickets/{id}/attachments/{attachmentId}` - download an attachment.
 - `GET /api/dashboard` - dashboard totals and recent tickets.
 
+## Screenshots
+
+Screenshots will be added once the API is deployed and the Swagger flow is finalized.
+
+| Area | Preview |
+| --- | --- |
+| Swagger API documentation | Coming soon |
+| JWT login flow | Coming soon |
+| Ticket dashboard response | Coming soon |
+
 ## Roles
 
 - `Admin` can see and manage all tickets.
 - `Agent` can see unassigned tickets, tickets assigned to them, and tickets they created.
 - `User` can see and manage tickets they created.
+
+## Roadmap
+
+- Add Entity Framework Core migrations for production database changes.
+- Add automated tests for authentication, ticket workflow, and dashboard endpoints.
+- Replace logging email sender with SMTP or a cloud email provider.
+- Add refresh tokens and token revocation.
+- Add ticket category and SLA tracking.
+- Add audit trail for ticket assignment and status changes.
+- Add production deployment and live demo link.
