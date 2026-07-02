@@ -1,4 +1,5 @@
 using HelpdeskTicketManagement.Api.Extensions;
+using HelpdeskTicketManagement.Api.Requests;
 using HelpdeskTicketManagement.Application.Abstractions;
 using HelpdeskTicketManagement.Application.Dtos.Tickets;
 using HelpdeskTicketManagement.Domain.Entities;
@@ -253,25 +254,28 @@ public sealed class TicketsController(
         return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, response);
     }
 
-    [HttpPost("{id:guid}/attachments")]
+    [HttpPost("{ticketId}/attachments")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(20_000_000)]
-    public async Task<ActionResult<TicketAttachmentResponse>> UploadAttachment(
-        Guid id,
-        [FromForm] IFormFile file,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadAttachment(
+        Guid ticketId,
+        [FromForm] UploadAttachmentRequest request)
     {
+        var cancellationToken = HttpContext.RequestAborted;
+        var file = request.File;
+
         if (currentUser.UserId is not { } userId)
         {
             return Unauthorized();
         }
 
-        var ticket = await dbContext.Tickets.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken);
+        var ticket = await dbContext.Tickets.FirstOrDefaultAsync(candidate => candidate.Id == ticketId, cancellationToken);
         if (ticket is null || !CanAccess(ticket))
         {
             return NotFound();
         }
 
-        if (file.Length == 0)
+        if (file is null || file.Length == 0)
         {
             return BadRequest("Attachment file is required.");
         }
