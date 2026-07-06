@@ -14,6 +14,13 @@ public sealed record TicketResponse(
     string? AssignedToName,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt,
+    DateTimeOffset FirstResponseDueAt,
+    DateTimeOffset ResolutionDueAt,
+    DateTimeOffset? FirstResponseAt,
+    DateTimeOffset? ResolvedAt,
     DateTimeOffset? ClosedAt,
+    bool IsResponseSlaBreached,
+    bool IsResolutionSlaBreached,
+    bool IsSlaBreached,
     IReadOnlyCollection<TicketCommentResponse> Comments,
     IReadOnlyCollection<TicketAttachmentResponse> Attachments);

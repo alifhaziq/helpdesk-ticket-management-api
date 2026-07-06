@@ -16,6 +16,8 @@ namespace HelpDeskPro.Api.Controllers;
 public sealed class TicketsController(
     IHelpDeskProDbContext dbContext,
     ICurrentUserService currentUser,
+    IAuditService auditService,
+    ISlaPolicy slaPolicy,
     IEmailSender emailSender,
     IFileStorageService fileStorage) : ControllerBase
 {
@@ -24,6 +26,8 @@ public sealed class TicketsController(
         [FromQuery] TicketStatus? status,
         [FromQuery] bool assignedToMe,
         [FromQuery] bool createdByMe,
+        [FromQuery] bool slaBreached,
+        [FromQuery] int? slaDueWithinHours,
         CancellationToken cancellationToken)
     {
         var query = BuildDetailedTicketQuery();
@@ -43,11 +47,22 @@ public sealed class TicketsController(
             query = query.Where(ticket => ticket.CreatedById == createdByUserId);
         }
 
+        var now = DateTimeOffset.UtcNow;
+        if (slaBreached)
+        {
+            query = ApplySlaBreachedFilter(query, now);
+        }
+
+        if (slaDueWithinHours is > 0)
+        {
+            query = ApplySlaDueSoonFilter(query, now, now.AddHours(slaDueWithinHours.Value));
+        }
+
         var tickets = await query
             .OrderByDescending(ticket => ticket.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return Ok(tickets.Select(ticket => ticket.ToResponse()).ToArray());
+        return Ok(tickets.Select(ticket => ticket.ToResponse(slaPolicy)).ToArray());
     }
 
     [HttpGet("{id:guid}")]
@@ -56,7 +71,7 @@ public sealed class TicketsController(
         var ticket = await BuildDetailedTicketQuery()
             .FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken);
 
-        return ticket is null ? NotFound() : Ok(ticket.ToResponse());
+        return ticket is null ? NotFound() : Ok(ticket.ToResponse(slaPolicy));
     }
 
     [HttpPost]
@@ -74,22 +89,34 @@ public sealed class TicketsController(
             return BadRequest("Title and description are required.");
         }
 
+        var createdAt = DateTimeOffset.UtcNow;
+        var slaTargets = slaPolicy.CalculateTargets(createdAt, request.Priority);
         var ticket = new Ticket
         {
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
             Priority = request.Priority,
             Status = TicketStatus.Open,
-            CreatedById = userId
+            CreatedById = userId,
+            CreatedAt = createdAt,
+            FirstResponseDueAt = slaTargets.FirstResponseDueAt,
+            ResolutionDueAt = slaTargets.ResolutionDueAt
         };
 
         dbContext.Tickets.Add(ticket);
+        await auditService.RecordAsync(
+            "Ticket.Create",
+            nameof(Ticket),
+            ticket.Id,
+            new { ticket.Title, ticket.Priority },
+            cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var created = await BuildDetailedTicketQuery()
             .FirstAsync(candidate => candidate.Id == ticket.Id, cancellationToken);
 
-        return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, created.ToResponse());
+        return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, created.ToResponse(slaPolicy));
     }
 
     [HttpPut("{id:guid}")]
@@ -114,17 +141,29 @@ public sealed class TicketsController(
             return BadRequest("Title and description are required.");
         }
 
+        var previousPriority = ticket.Priority;
         ticket.Title = request.Title.Trim();
         ticket.Description = request.Description.Trim();
         ticket.Priority = request.Priority;
         ticket.UpdatedAt = DateTimeOffset.UtcNow;
+        if (previousPriority != request.Priority)
+        {
+            ApplySlaTargets(ticket);
+        }
+
+        await auditService.RecordAsync(
+            "Ticket.Update",
+            nameof(Ticket),
+            ticket.Id,
+            new { ticket.Title, PreviousPriority = previousPriority, ticket.Priority },
+            cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var updated = await BuildDetailedTicketQuery()
             .FirstAsync(candidate => candidate.Id == ticket.Id, cancellationToken);
 
-        return Ok(updated.ToResponse());
+        return Ok(updated.ToResponse(slaPolicy));
     }
 
     [Authorize(Roles = "Admin,Agent")]
@@ -162,9 +201,18 @@ public sealed class TicketsController(
             }
         }
 
+        var previousAssigneeId = ticket.AssignedToId;
         ticket.AssignedToId = assignee.Id;
         ticket.Status = ticket.Status == TicketStatus.Open ? TicketStatus.InProgress : ticket.Status;
         ticket.UpdatedAt = DateTimeOffset.UtcNow;
+        MarkFirstResponse(ticket, ticket.UpdatedAt.Value);
+
+        await auditService.RecordAsync(
+            "Ticket.Assign",
+            nameof(Ticket),
+            ticket.Id,
+            new { PreviousAssigneeId = previousAssigneeId, AssigneeId = assignee.Id },
+            cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await emailSender.TicketAssignedAsync(ticket, assignee, cancellationToken);
@@ -172,7 +220,7 @@ public sealed class TicketsController(
         var updated = await BuildDetailedTicketQuery()
             .FirstAsync(candidate => candidate.Id == ticket.Id, cancellationToken);
 
-        return Ok(updated.ToResponse());
+        return Ok(updated.ToResponse(slaPolicy));
     }
 
     [Authorize(Roles = "Admin,Agent")]
@@ -195,9 +243,29 @@ public sealed class TicketsController(
             return Forbid();
         }
 
+        var now = DateTimeOffset.UtcNow;
+        var previousStatus = ticket.Status;
         ticket.Status = request.Status;
-        ticket.UpdatedAt = DateTimeOffset.UtcNow;
-        ticket.ClosedAt = request.Status == TicketStatus.Closed ? DateTimeOffset.UtcNow : null;
+        ticket.UpdatedAt = now;
+        MarkFirstResponse(ticket, now);
+
+        if (request.Status is TicketStatus.Resolved or TicketStatus.Closed)
+        {
+            ticket.ResolvedAt ??= now;
+        }
+        else
+        {
+            ticket.ResolvedAt = null;
+        }
+
+        ticket.ClosedAt = request.Status == TicketStatus.Closed ? now : null;
+
+        await auditService.RecordAsync(
+            "Ticket.StatusChanged",
+            nameof(Ticket),
+            ticket.Id,
+            new { PreviousStatus = previousStatus, ticket.Status },
+            cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await emailSender.TicketStatusChangedAsync(ticket, cancellationToken);
@@ -205,7 +273,7 @@ public sealed class TicketsController(
         var updated = await BuildDetailedTicketQuery()
             .FirstAsync(candidate => candidate.Id == ticket.Id, cancellationToken);
 
-        return Ok(updated.ToResponse());
+        return Ok(updated.ToResponse(slaPolicy));
     }
 
     [HttpPost("{id:guid}/comments")]
@@ -239,6 +307,17 @@ public sealed class TicketsController(
 
         dbContext.TicketComments.Add(comment);
         ticket.UpdatedAt = DateTimeOffset.UtcNow;
+        if (currentUser.Role is UserRole.Admin or UserRole.Agent)
+        {
+            MarkFirstResponse(ticket, ticket.UpdatedAt.Value);
+        }
+
+        await auditService.RecordAsync(
+            "Ticket.Comment",
+            nameof(Ticket),
+            ticket.Id,
+            new { CommentId = comment.Id },
+            cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await emailSender.TicketCommentedAsync(ticket, comment, cancellationToken);
@@ -302,6 +381,13 @@ public sealed class TicketsController(
 
         dbContext.TicketAttachments.Add(attachment);
         ticket.UpdatedAt = DateTimeOffset.UtcNow;
+        await auditService.RecordAsync(
+            "Ticket.AttachmentUploaded",
+            nameof(Ticket),
+            ticket.Id,
+            new { AttachmentId = attachment.Id, attachment.OriginalFileName, attachment.Size },
+            cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var uploader = await dbContext.Users.AsNoTracking().FirstAsync(user => user.Id == userId, cancellationToken);
@@ -374,6 +460,53 @@ public sealed class TicketsController(
                 ticket.CreatedById == userId),
             _ => query.Where(ticket => ticket.CreatedById == userId)
         };
+    }
+
+    private static IQueryable<Ticket> ApplySlaBreachedFilter(IQueryable<Ticket> query, DateTimeOffset now)
+    {
+        return query.Where(ticket =>
+            (ticket.FirstResponseDueAt != default &&
+             ((ticket.FirstResponseAt == null && ticket.FirstResponseDueAt < now) ||
+              (ticket.FirstResponseAt != null && ticket.FirstResponseAt > ticket.FirstResponseDueAt))) ||
+            (ticket.ResolutionDueAt != default &&
+             ((ticket.ResolvedAt == null &&
+               ticket.Status != TicketStatus.Resolved &&
+               ticket.Status != TicketStatus.Closed &&
+               ticket.ResolutionDueAt < now) ||
+              (ticket.ResolvedAt != null && ticket.ResolvedAt > ticket.ResolutionDueAt))));
+    }
+
+    private static IQueryable<Ticket> ApplySlaDueSoonFilter(
+        IQueryable<Ticket> query,
+        DateTimeOffset now,
+        DateTimeOffset dueBy)
+    {
+        return query.Where(ticket =>
+            (ticket.FirstResponseDueAt != default &&
+             ticket.FirstResponseAt == null &&
+             ticket.FirstResponseDueAt >= now &&
+             ticket.FirstResponseDueAt <= dueBy) ||
+            (ticket.ResolutionDueAt != default &&
+             ticket.ResolvedAt == null &&
+             ticket.Status != TicketStatus.Resolved &&
+             ticket.Status != TicketStatus.Closed &&
+             ticket.ResolutionDueAt >= now &&
+             ticket.ResolutionDueAt <= dueBy));
+    }
+
+    private void ApplySlaTargets(Ticket ticket)
+    {
+        var targets = slaPolicy.CalculateTargets(ticket.CreatedAt, ticket.Priority);
+        ticket.FirstResponseDueAt = targets.FirstResponseDueAt;
+        ticket.ResolutionDueAt = targets.ResolutionDueAt;
+    }
+
+    private void MarkFirstResponse(Ticket ticket, DateTimeOffset respondedAt)
+    {
+        if (ticket.FirstResponseAt is null && currentUser.Role is UserRole.Admin or UserRole.Agent)
+        {
+            ticket.FirstResponseAt = respondedAt;
+        }
     }
 
     private bool CanAccess(Ticket ticket)

@@ -1,3 +1,4 @@
+using HelpDeskPro.Application.Abstractions;
 using HelpDeskPro.Application.Dtos.Tickets;
 using HelpDeskPro.Domain.Entities;
 
@@ -5,8 +6,12 @@ namespace HelpDeskPro.Api.Extensions;
 
 public static class TicketMappingExtensions
 {
-    public static TicketResponse ToResponse(this Ticket ticket)
+    public static TicketResponse ToResponse(this Ticket ticket, ISlaPolicy slaPolicy)
     {
+        var now = DateTimeOffset.UtcNow;
+        var isResponseSlaBreached = slaPolicy.IsResponseBreached(ticket, now);
+        var isResolutionSlaBreached = slaPolicy.IsResolutionBreached(ticket, now);
+
         var comments = ticket.Comments
             .OrderBy(comment => comment.CreatedAt)
             .Select(comment => new TicketCommentResponse(
@@ -41,7 +46,14 @@ public static class TicketMappingExtensions
             ticket.AssignedTo?.FullName,
             ticket.CreatedAt,
             ticket.UpdatedAt,
+            ticket.FirstResponseDueAt,
+            ticket.ResolutionDueAt,
+            ticket.FirstResponseAt,
+            ticket.ResolvedAt,
             ticket.ClosedAt,
+            isResponseSlaBreached,
+            isResolutionSlaBreached,
+            isResponseSlaBreached || isResolutionSlaBreached,
             comments,
             attachments);
     }

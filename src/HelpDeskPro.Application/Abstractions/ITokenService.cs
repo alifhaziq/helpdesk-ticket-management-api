@@ -4,5 +4,7 @@ namespace HelpDeskPro.Application.Abstractions;
 
 public interface ITokenService
 {
-    string GenerateToken(AppUser user);
+    string GenerateAccessToken(AppUser user);
+    string GenerateRefreshToken();
+    string HashRefreshToken(string refreshToken);
 }

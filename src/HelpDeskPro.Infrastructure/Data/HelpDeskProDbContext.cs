@@ -13,6 +13,8 @@ public sealed class HelpDeskProDbContext(DbContextOptions<HelpDeskProDbContext> 
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<TicketComment> TicketComments => Set<TicketComment>();
     public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,16 @@ public sealed class HelpDeskProDbContext(DbContextOptions<HelpDeskProDbContext> 
                 .WithOne(ticket => ticket.AssignedTo)
                 .HasForeignKey(ticket => ticket.AssignedToId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(user => user.RefreshTokens)
+                .WithOne(token => token.User)
+                .HasForeignKey(token => token.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(user => user.AuditLogs)
+                .WithOne(log => log.User)
+                .HasForeignKey(log => log.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Ticket>(builder =>
@@ -55,6 +67,8 @@ public sealed class HelpDeskProDbContext(DbContextOptions<HelpDeskProDbContext> 
             builder.HasIndex(ticket => ticket.Priority);
             builder.HasIndex(ticket => ticket.CreatedAt);
             builder.HasIndex(ticket => ticket.AssignedToId);
+            builder.HasIndex(ticket => ticket.FirstResponseDueAt);
+            builder.HasIndex(ticket => ticket.ResolutionDueAt);
         });
 
         modelBuilder.Entity<TicketComment>(builder =>
@@ -94,6 +108,29 @@ public sealed class HelpDeskProDbContext(DbContextOptions<HelpDeskProDbContext> 
                 .WithMany(user => user.Attachments)
                 .HasForeignKey(attachment => attachment.UploadedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RefreshToken>(builder =>
+        {
+            builder.ToTable("RefreshTokens");
+            builder.HasKey(token => token.Id);
+            builder.Property(token => token.TokenHash).HasMaxLength(128).IsRequired();
+            builder.HasIndex(token => token.TokenHash).IsUnique();
+            builder.HasIndex(token => token.UserId);
+            builder.HasIndex(token => token.ExpiresAt);
+            builder.HasIndex(token => token.RevokedAt);
+        });
+
+        modelBuilder.Entity<AuditLog>(builder =>
+        {
+            builder.ToTable("AuditLogs");
+            builder.HasKey(log => log.Id);
+            builder.Property(log => log.Action).HasMaxLength(100).IsRequired();
+            builder.Property(log => log.EntityName).HasMaxLength(100).IsRequired();
+            builder.Property(log => log.Details).HasMaxLength(4000);
+            builder.HasIndex(log => log.CreatedAt);
+            builder.HasIndex(log => log.UserId);
+            builder.HasIndex(log => new { log.EntityName, log.EntityId });
         });
     }
 }

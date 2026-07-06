@@ -14,7 +14,8 @@ namespace HelpDeskPro.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class DashboardController(
     IHelpDeskProDbContext dbContext,
-    ICurrentUserService currentUser) : ControllerBase
+    ICurrentUserService currentUser,
+    ISlaPolicy slaPolicy) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<DashboardResponse>> GetDashboard(CancellationToken cancellationToken)
@@ -35,6 +36,10 @@ public sealed class DashboardController(
         var createdByMe = userId.HasValue
             ? await scopedTickets.CountAsync(ticket => ticket.CreatedById == userId.Value, cancellationToken)
             : 0;
+        var now = DateTimeOffset.UtcNow;
+        var dueSoonAt = now.AddHours(24);
+        var slaBreachedTickets = await ApplySlaBreachedFilter(scopedTickets, now).CountAsync(cancellationToken);
+        var slaDueSoonTickets = await ApplySlaDueSoonFilter(scopedTickets, now, dueSoonAt).CountAsync(cancellationToken);
 
         var statusCounts = await scopedTickets
             .GroupBy(ticket => ticket.Status)
@@ -66,9 +71,11 @@ public sealed class DashboardController(
             unassignedTickets,
             assignedToMe,
             createdByMe,
+            slaBreachedTickets,
+            slaDueSoonTickets,
             statusCounts.Select(item => new StatusCountResponse(item.Status.ToString(), item.Count)).ToArray(),
             priorityCounts.Select(item => new PriorityCountResponse(item.Priority.ToString(), item.Count)).ToArray(),
-            recentTickets.Select(ticket => ticket.ToResponse()).ToArray());
+            recentTickets.Select(ticket => ticket.ToResponse(slaPolicy)).ToArray());
 
         return Ok(response);
     }
@@ -89,5 +96,37 @@ public sealed class DashboardController(
                 ticket.CreatedById == userId),
             _ => query.Where(ticket => ticket.CreatedById == userId)
         };
+    }
+
+    private static IQueryable<Ticket> ApplySlaBreachedFilter(IQueryable<Ticket> query, DateTimeOffset now)
+    {
+        return query.Where(ticket =>
+            (ticket.FirstResponseDueAt != default &&
+             ((ticket.FirstResponseAt == null && ticket.FirstResponseDueAt < now) ||
+              (ticket.FirstResponseAt != null && ticket.FirstResponseAt > ticket.FirstResponseDueAt))) ||
+            (ticket.ResolutionDueAt != default &&
+             ((ticket.ResolvedAt == null &&
+               ticket.Status != TicketStatus.Resolved &&
+               ticket.Status != TicketStatus.Closed &&
+               ticket.ResolutionDueAt < now) ||
+              (ticket.ResolvedAt != null && ticket.ResolvedAt > ticket.ResolutionDueAt))));
+    }
+
+    private static IQueryable<Ticket> ApplySlaDueSoonFilter(
+        IQueryable<Ticket> query,
+        DateTimeOffset now,
+        DateTimeOffset dueBy)
+    {
+        return query.Where(ticket =>
+            (ticket.FirstResponseDueAt != default &&
+             ticket.FirstResponseAt == null &&
+             ticket.FirstResponseDueAt >= now &&
+             ticket.FirstResponseDueAt <= dueBy) ||
+            (ticket.ResolutionDueAt != default &&
+             ticket.ResolvedAt == null &&
+             ticket.Status != TicketStatus.Resolved &&
+             ticket.Status != TicketStatus.Closed &&
+             ticket.ResolutionDueAt >= now &&
+             ticket.ResolutionDueAt <= dueBy));
     }
 }

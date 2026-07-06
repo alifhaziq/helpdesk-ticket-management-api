@@ -15,6 +15,10 @@ public sealed class Ticket
     public AppUser? AssignedTo { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTimeOffset FirstResponseDueAt { get; set; }
+    public DateTimeOffset ResolutionDueAt { get; set; }
+    public DateTimeOffset? FirstResponseAt { get; set; }
+    public DateTimeOffset? ResolvedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
 
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();

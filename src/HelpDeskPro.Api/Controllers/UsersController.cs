@@ -13,7 +13,8 @@ namespace HelpDeskPro.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class UsersController(
     IHelpDeskProDbContext dbContext,
-    IPasswordHasher passwordHasher) : ControllerBase
+    IPasswordHasher passwordHasher,
+    IAuditService auditService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<UserResponse>>> GetUsers(
@@ -68,6 +69,13 @@ public sealed class UsersController(
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
         dbContext.Users.Add(user);
+        await auditService.RecordAsync(
+            "User.Create",
+            nameof(AppUser),
+            user.Id,
+            new { user.Email, user.Role },
+            cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var response = new UserResponse(user.Id, user.FullName, user.Email, user.Role);

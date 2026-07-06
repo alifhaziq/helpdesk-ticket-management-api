@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using HelpDeskPro.Application.Abstractions;
 using HelpDeskPro.Domain.Entities;
@@ -11,7 +12,7 @@ namespace HelpDeskPro.Infrastructure.Services;
 
 public sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenService
 {
-    public string GenerateToken(AppUser user)
+    public string GenerateAccessToken(AppUser user)
     {
         var jwtOptions = options.Value;
         if (jwtOptions.Secret.Length < 32)
@@ -40,5 +41,20 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenServic
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public string GenerateRefreshToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
+    public string HashRefreshToken(string refreshToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToBase64String(bytes);
     }
 }

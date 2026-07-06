@@ -11,6 +11,8 @@ public sealed record DashboardResponse(
     int UnassignedTickets,
     int TicketsAssignedToMe,
     int TicketsCreatedByMe,
+    int SlaBreachedTickets,
+    int SlaDueSoonTickets,
     IReadOnlyCollection<StatusCountResponse> ByStatus,
     IReadOnlyCollection<PriorityCountResponse> ByPriority,
     IReadOnlyCollection<TicketResponse> RecentTickets);

@@ -2,9 +2,11 @@ using HelpDeskPro.Application.Abstractions;
 using HelpDeskPro.Application.Dtos.Auth;
 using HelpDeskPro.Domain.Entities;
 using HelpDeskPro.Domain.Enums;
+using HelpDeskPro.Infrastructure.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace HelpDeskPro.Api.Controllers;
 
@@ -14,7 +16,9 @@ public sealed class AuthController(
     IHelpDeskProDbContext dbContext,
     IPasswordHasher passwordHasher,
     ITokenService tokenService,
-    ICurrentUserService currentUser) : ControllerBase
+    ICurrentUserService currentUser,
+    IAuditService auditService,
+    IOptions<RefreshTokenOptions> refreshTokenOptions) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("register")]
@@ -48,9 +52,17 @@ public sealed class AuthController(
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
         dbContext.Users.Add(user);
+        var refreshToken = AddRefreshToken(user);
+        await auditService.RecordAsync(
+            "Auth.Register",
+            nameof(AppUser),
+            user.Id,
+            new { user.Email, user.Role },
+            cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(CreateAuthResponse(user));
+        return Ok(CreateAuthResponse(user, refreshToken.Token));
     }
 
     [AllowAnonymous]
@@ -72,7 +84,92 @@ public sealed class AuthController(
             return Unauthorized("Invalid email or password.");
         }
 
-        return Ok(CreateAuthResponse(user));
+        var refreshToken = AddRefreshToken(user);
+        await auditService.RecordAsync(
+            "Auth.Login",
+            nameof(AppUser),
+            user.Id,
+            new { user.Email, user.Role },
+            cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(CreateAuthResponse(user, refreshToken.Token));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<ActionResult<AuthResponse>> Refresh(
+        RefreshTokenRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return BadRequest("Refresh token is required.");
+        }
+
+        var tokenHash = tokenService.HashRefreshToken(request.RefreshToken);
+        var storedToken = await dbContext.RefreshTokens
+            .Include(token => token.User)
+            .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
+
+        if (storedToken is null ||
+            storedToken.RevokedAt is not null ||
+            storedToken.ExpiresAt <= DateTimeOffset.UtcNow ||
+            storedToken.User is null ||
+            !storedToken.User.IsActive)
+        {
+            return Unauthorized("Invalid refresh token.");
+        }
+
+        var replacementToken = AddRefreshToken(storedToken.User);
+        storedToken.RevokedAt = DateTimeOffset.UtcNow;
+        storedToken.ReplacedByTokenId = replacementToken.Entity.Id;
+
+        await auditService.RecordAsync(
+            "Auth.Refresh",
+            nameof(RefreshToken),
+            storedToken.Id,
+            new { storedToken.UserId, ReplacementTokenId = replacementToken.Entity.Id },
+            cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(CreateAuthResponse(storedToken.User, replacementToken.Token));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("revoke")]
+    public async Task<IActionResult> Revoke(
+        RevokeRefreshTokenRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return BadRequest("Refresh token is required.");
+        }
+
+        var tokenHash = tokenService.HashRefreshToken(request.RefreshToken);
+        var storedToken = await dbContext.RefreshTokens
+            .FirstOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
+
+        if (storedToken is null || storedToken.RevokedAt is not null)
+        {
+            return NoContent();
+        }
+
+        storedToken.RevokedAt = DateTimeOffset.UtcNow;
+
+        await auditService.RecordAsync(
+            "Auth.RevokeRefreshToken",
+            nameof(RefreshToken),
+            storedToken.Id,
+            new { storedToken.UserId },
+            cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
     }
 
     [Authorize]
@@ -91,8 +188,22 @@ public sealed class AuthController(
         return user is null ? Unauthorized() : Ok(ToUserResponse(user));
     }
 
-    private AuthResponse CreateAuthResponse(AppUser user) =>
-        new(tokenService.GenerateToken(user), ToUserResponse(user));
+    private AuthResponse CreateAuthResponse(AppUser user, string refreshToken) =>
+        new(tokenService.GenerateAccessToken(user), refreshToken, ToUserResponse(user));
+
+    private (string Token, RefreshToken Entity) AddRefreshToken(AppUser user)
+    {
+        var token = tokenService.GenerateRefreshToken();
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = tokenService.HashRefreshToken(token),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(Math.Max(1, refreshTokenOptions.Value.ExpirationDays))
+        };
+
+        dbContext.RefreshTokens.Add(refreshToken);
+        return (token, refreshToken);
+    }
 
     private static UserResponse ToUserResponse(AppUser user) =>
         new(user.Id, user.FullName, user.Email, user.Role);

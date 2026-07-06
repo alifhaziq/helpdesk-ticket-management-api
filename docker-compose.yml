@@ -22,10 +22,12 @@ services:
       Jwt__Issuer: "HelpDeskPro"
       Jwt__Audience: "HelpDeskPro"
       Jwt__Secret: "replace-this-development-secret-with-at-least-32-characters"
+      RefreshTokens__ExpirationDays: "14"
       SeedAdmin__Email: "admin@helpdesk.local"
       SeedAdmin__Password: "Admin123!"
       Database__EnsureCreated: "true"
       AttachmentStorage__RootPath: "/app/attachments"
+      Smtp__Enabled: "false"
     ports:
       - "8080:8080"
     volumes:

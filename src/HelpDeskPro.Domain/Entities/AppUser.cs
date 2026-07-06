@@ -16,4 +16,6 @@ public sealed class AppUser
     public ICollection<Ticket> AssignedTickets { get; set; } = new List<Ticket>();
     public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
 }

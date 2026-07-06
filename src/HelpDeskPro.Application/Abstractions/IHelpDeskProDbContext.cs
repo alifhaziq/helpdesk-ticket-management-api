@@ -9,6 +9,8 @@ public interface IHelpDeskProDbContext
     DbSet<Ticket> Tickets { get; }
     DbSet<TicketComment> TicketComments { get; }
     DbSet<TicketAttachment> TicketAttachments { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

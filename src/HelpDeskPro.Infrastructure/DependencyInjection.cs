@@ -16,6 +16,8 @@ public static class DependencyInjection
         services.Configure<AttachmentStorageOptions>(configuration.GetSection(AttachmentStorageOptions.SectionName));
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
+        services.Configure<RefreshTokenOptions>(configuration.GetSection(RefreshTokenOptions.SectionName));
+        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
@@ -31,8 +33,10 @@ public static class DependencyInjection
 
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddSingleton<ISlaPolicy, SlaPolicy>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
-        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;
     }
